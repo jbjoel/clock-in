@@ -9,6 +9,7 @@
 		taskHistory
 	} from '$lib/stores/timer';
 	import { playSound } from '$lib/utils/audio';
+	import { celebrate } from '$lib/utils/celebration';
 	import Timer from '$lib/components/Timer.svelte';
 	import DurationPicker from '$lib/components/DurationPicker.svelte';
 	import TaskInput from '$lib/components/TaskInput.svelte';
@@ -28,7 +29,7 @@
 				playSound(currentSettings.selectedSound);
 			}
 
-			// Only record stats for focus sessions, not cooldowns
+			// Only record stats and celebrate for focus sessions, not cooldowns
 			if (!timerState.isCooldown) {
 				stats.recordCompletion(timerState.selectedDuration);
 				// Record task stats and add to history
@@ -36,6 +37,8 @@
 					taskStats.recordMinutes(timerState.taskName, timerState.selectedDuration);
 					taskHistory.addTask(timerState.taskName);
 				}
+				// Celebrate with random confetti!
+				celebrate();
 			}
 			hasPlayedSound = true;
 

@@ -1,5 +1,8 @@
 import { writable, derived, get } from 'svelte/store';
-import { browser } from '$app/environment';
+import { browser, dev } from '$app/environment';
+
+// In dev mode, timer runs 5x faster for easier testing
+const TICK_INTERVAL = dev ? 200 : 1000;
 
 // Types
 export interface TimerSettings {
@@ -268,7 +271,7 @@ function createTimerStore() {
 			update((state) => {
 				if (state.isRunning || state.remainingSeconds <= 0) return state;
 				clearTimerInterval();
-				intervalId = setInterval(tick, 1000);
+				intervalId = setInterval(tick, TICK_INTERVAL);
 				return { ...state, isRunning: true, isComplete: false };
 			});
 		},
