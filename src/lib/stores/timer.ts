@@ -6,10 +6,18 @@ export interface TimerSettings {
 	gradations: number[]; // Duration options in minutes
 	selectedSound: string;
 	soundEnabled: boolean;
+	autoStart: boolean; // Automatically start next timer after completion
+	cooldownEnabled: boolean; // Enable cooldown period between focus sessions
+	cooldownDuration: number; // Cooldown duration in minutes
+	cooldownAutoStart: boolean; // Automatically start cooldown after focus completes
 }
 
 export interface CompletionStats {
 	[duration: number]: number; // duration in minutes -> count of completions
+}
+
+export interface TaskStats {
+	[taskName: string]: number; // task name -> total minutes focused
 }
 
 export interface TimerState {
@@ -18,6 +26,7 @@ export interface TimerState {
 	isRunning: boolean;
 	isComplete: boolean;
 	taskName: string;
+	isCooldown: boolean; // Whether currently in cooldown mode
 }
 
 // Default values
@@ -25,7 +34,11 @@ const DEFAULT_GRADATIONS = [1, 5, 10, 20, 40];
 const DEFAULT_SETTINGS: TimerSettings = {
 	gradations: DEFAULT_GRADATIONS,
 	selectedSound: 'chime',
-	soundEnabled: true
+	soundEnabled: true,
+	autoStart: false,
+	cooldownEnabled: false,
+	cooldownDuration: 2,
+	cooldownAutoStart: true
 };
 
 const DEFAULT_STATE: TimerState = {
@@ -33,14 +46,17 @@ const DEFAULT_STATE: TimerState = {
 	remainingSeconds: 60,
 	isRunning: false,
 	isComplete: false,
-	taskName: ''
+	taskName: '',
+	isCooldown: false
 };
 
 // LocalStorage keys
 const STORAGE_KEYS = {
 	settings: 'clockin-settings',
 	stats: 'clockin-stats',
-	taskName: 'clockin-task'
+	taskName: 'clockin-task',
+	taskStats: 'clockin-task-stats',
+	taskHistory: 'clockin-task-history'
 };
 
 // Helper to safely access localStorage
@@ -94,6 +110,34 @@ function createSettingsStore() {
 				return newSettings;
 			});
 		},
+		toggleAutoStart: () => {
+			update((s) => {
+				const newSettings = { ...s, autoStart: !s.autoStart };
+				saveToStorage(STORAGE_KEYS.settings, newSettings);
+				return newSettings;
+			});
+		},
+		toggleCooldown: () => {
+			update((s) => {
+				const newSettings = { ...s, cooldownEnabled: !s.cooldownEnabled };
+				saveToStorage(STORAGE_KEYS.settings, newSettings);
+				return newSettings;
+			});
+		},
+		setCooldownDuration: (minutes: number) => {
+			update((s) => {
+				const newSettings = { ...s, cooldownDuration: Math.max(1, Math.min(30, minutes)) };
+				saveToStorage(STORAGE_KEYS.settings, newSettings);
+				return newSettings;
+			});
+		},
+		toggleCooldownAutoStart: () => {
+			update((s) => {
+				const newSettings = { ...s, cooldownAutoStart: !s.cooldownAutoStart };
+				saveToStorage(STORAGE_KEYS.settings, newSettings);
+				return newSettings;
+			});
+		},
 		reset: () => {
 			set(DEFAULT_SETTINGS);
 			saveToStorage(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
@@ -121,6 +165,64 @@ function createStatsStore() {
 		getCount: (duration: number): number => {
 			const stats = get({ subscribe });
 			return stats[duration] || 0;
+		}
+	};
+}
+
+function createTaskStatsStore() {
+	const initial = loadFromStorage<TaskStats>(STORAGE_KEYS.taskStats, {});
+	const { subscribe, set, update } = writable<TaskStats>(initial);
+
+	return {
+		subscribe,
+		recordMinutes: (taskName: string, minutes: number) => {
+			if (!taskName.trim()) return; // Don't record empty task names
+			const normalizedName = taskName.trim();
+			update((stats) => {
+				const newStats = { ...stats, [normalizedName]: (stats[normalizedName] || 0) + minutes };
+				saveToStorage(STORAGE_KEYS.taskStats, newStats);
+				return newStats;
+			});
+		},
+		reset: () => {
+			set({});
+			saveToStorage(STORAGE_KEYS.taskStats, {});
+		},
+		getMinutes: (taskName: string): number => {
+			const stats = get({ subscribe });
+			return stats[taskName.trim()] || 0;
+		}
+	};
+}
+
+function createTaskHistoryStore() {
+	const initial = loadFromStorage<string[]>(STORAGE_KEYS.taskHistory, []);
+	const { subscribe, set, update } = writable<string[]>(initial);
+
+	return {
+		subscribe,
+		addTask: (taskName: string) => {
+			if (!taskName.trim()) return; // Don't add empty task names
+			const normalizedName = taskName.trim();
+			update((history) => {
+				// Remove if already exists (to move to front)
+				const filtered = history.filter((t) => t !== normalizedName);
+				// Add to front, limit to 20 recent tasks
+				const newHistory = [normalizedName, ...filtered].slice(0, 20);
+				saveToStorage(STORAGE_KEYS.taskHistory, newHistory);
+				return newHistory;
+			});
+		},
+		removeTask: (taskName: string) => {
+			update((history) => {
+				const newHistory = history.filter((t) => t !== taskName);
+				saveToStorage(STORAGE_KEYS.taskHistory, newHistory);
+				return newHistory;
+			});
+		},
+		reset: () => {
+			set([]);
+			saveToStorage(STORAGE_KEYS.taskHistory, []);
 		}
 	};
 }
@@ -158,7 +260,8 @@ function createTimerStore() {
 				selectedDuration: minutes,
 				remainingSeconds: minutes * 60,
 				isRunning: false,
-				isComplete: false
+				isComplete: false,
+				isCooldown: false
 			}));
 		},
 		start: () => {
@@ -189,6 +292,26 @@ function createTimerStore() {
 		acknowledgeComplete: () => {
 			update((state) => ({ ...state, isComplete: false }));
 		},
+		startCooldown: (durationMinutes: number) => {
+			clearTimerInterval();
+			update((state) => ({
+				...state,
+				selectedDuration: durationMinutes,
+				remainingSeconds: durationMinutes * 60,
+				isRunning: false,
+				isComplete: false,
+				isCooldown: true
+			}));
+		},
+		endCooldown: () => {
+			clearTimerInterval();
+			update((state) => ({
+				...state,
+				isRunning: false,
+				isComplete: false,
+				isCooldown: false
+			}));
+		},
 		cleanup: () => {
 			clearTimerInterval();
 		}
@@ -198,6 +321,8 @@ function createTimerStore() {
 // Export stores
 export const settings = createSettingsStore();
 export const stats = createStatsStore();
+export const taskStats = createTaskStatsStore();
+export const taskHistory = createTaskHistoryStore();
 export const timer = createTimerStore();
 
 // Derived stores for convenience
@@ -211,3 +336,14 @@ export const progress = derived(timer, ($timer) => {
 	const totalSeconds = $timer.selectedDuration * 60;
 	return totalSeconds > 0 ? ($timer.remainingSeconds / totalSeconds) * 100 : 100;
 });
+
+// Helper to get the next duration in the gradation sequence
+export function getNextDuration(currentDuration: number, gradations: number[]): number {
+	const sorted = [...gradations].sort((a, b) => a - b);
+	const currentIndex = sorted.indexOf(currentDuration);
+	if (currentIndex === -1 || currentIndex === sorted.length - 1) {
+		// If not found or at the end, wrap to the first duration
+		return sorted[0];
+	}
+	return sorted[currentIndex + 1];
+}

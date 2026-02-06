@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settings, stats } from '$lib/stores/timer';
+	import { settings, stats, taskStats, taskHistory } from '$lib/stores/timer';
 
 	interface Props {
 		isOpen: boolean;
@@ -10,6 +10,8 @@
 
 	const currentSettings = $derived($settings);
 	const currentStats = $derived($stats);
+	const currentTaskStats = $derived($taskStats);
+	const currentTaskHistory = $derived($taskHistory);
 
 	let newGradation = $state('');
 	let gradationError = $state('');
@@ -51,6 +53,8 @@
 	function resetStats() {
 		if (confirm('Are you sure you want to reset all completion statistics?')) {
 			stats.reset();
+			taskStats.reset();
+			taskHistory.reset();
 		}
 	}
 
@@ -58,6 +62,8 @@
 		if (confirm('Are you sure you want to reset all settings to default?')) {
 			settings.reset();
 			stats.reset();
+			taskStats.reset();
+			taskHistory.reset();
 		}
 	}
 
@@ -82,6 +88,18 @@
 			return sum + parseInt(duration) * count;
 		}, 0);
 	}
+
+	function formatMinutes(minutes: number): string {
+		if (minutes < 60) return `${minutes}m`;
+		const hours = Math.floor(minutes / 60);
+		const mins = minutes % 60;
+		return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+	}
+
+	// Get sorted task stats (by minutes, descending)
+	function getSortedTaskStats(): [string, number][] {
+		return Object.entries(currentTaskStats).sort((a, b) => b[1] - a[1]);
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -95,7 +113,12 @@
 				<h2 id="settings-title">Settings</h2>
 				<button class="close-btn" onclick={onClose} aria-label="Close settings">
 					<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-						<path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+						<path
+							d="M15 5L5 15M5 5L15 15"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+						/>
 					</svg>
 				</button>
 			</header>
@@ -114,7 +137,12 @@
 									aria-label="Remove {duration} minute option"
 								>
 									<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-										<path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+										<path
+											d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5"
+											stroke="currentColor"
+											stroke-width="1.5"
+											stroke-linecap="round"
+										/>
 									</svg>
 								</button>
 							{/if}
@@ -155,17 +183,91 @@
 				</div>
 				<label class="toggle-row">
 					<span>Sound enabled</span>
-				<button
-					class="toggle"
-					class:active={currentSettings.soundEnabled}
-					onclick={() => settings.toggleSound()}
-					role="switch"
-					aria-checked={currentSettings.soundEnabled}
-					aria-label="Toggle sound"
-				>
-					<span class="toggle-knob"></span>
-				</button>
+					<button
+						class="toggle"
+						class:active={currentSettings.soundEnabled}
+						onclick={() => settings.toggleSound()}
+						role="switch"
+						aria-checked={currentSettings.soundEnabled}
+						aria-label="Toggle sound"
+					>
+						<span class="toggle-knob"></span>
+					</button>
 				</label>
+			</section>
+
+			<section class="settings-section">
+				<h3>Auto Mode</h3>
+				<p class="section-desc">Automatically advance through timer durations</p>
+				<label class="toggle-row">
+					<span>Auto-start next timer</span>
+					<button
+						class="toggle"
+						class:active={currentSettings.autoStart}
+						onclick={() => settings.toggleAutoStart()}
+						role="switch"
+						aria-checked={currentSettings.autoStart}
+						aria-label="Toggle auto-start"
+					>
+						<span class="toggle-knob"></span>
+					</button>
+				</label>
+				<p class="section-hint">
+					When enabled, the next duration will automatically start after each timer completes
+				</p>
+			</section>
+
+			<section class="settings-section">
+				<h3>Cooldown / Rest Period</h3>
+				<p class="section-desc">Take a break between focus sessions</p>
+				<label class="toggle-row">
+					<span>Enable cooldown</span>
+					<button
+						class="toggle"
+						class:active={currentSettings.cooldownEnabled}
+						onclick={() => settings.toggleCooldown()}
+						role="switch"
+						aria-checked={currentSettings.cooldownEnabled}
+						aria-label="Toggle cooldown"
+					>
+						<span class="toggle-knob"></span>
+					</button>
+				</label>
+				{#if currentSettings.cooldownEnabled}
+					<div class="cooldown-settings">
+						<label class="setting-row">
+							<span>Rest duration</span>
+							<div class="duration-input-wrapper">
+								<input
+									type="number"
+									class="input-field duration-input"
+									value={currentSettings.cooldownDuration}
+									min="1"
+									max="30"
+									onchange={(e) =>
+										settings.setCooldownDuration(parseInt(e.currentTarget.value) || 2)}
+								/>
+								<span class="duration-suffix">min</span>
+							</div>
+						</label>
+						<label class="toggle-row">
+							<span>Auto-start cooldown</span>
+							<button
+								class="toggle"
+								class:active={currentSettings.cooldownAutoStart}
+								onclick={() => settings.toggleCooldownAutoStart()}
+								role="switch"
+								aria-checked={currentSettings.cooldownAutoStart}
+								aria-label="Toggle cooldown auto-start"
+							>
+								<span class="toggle-knob"></span>
+							</button>
+						</label>
+						<p class="section-hint">
+							When enabled, the rest period will automatically start after each focus session
+						</p>
+					</div>
+				{/if}
 			</section>
 
 			<section class="settings-section">
@@ -180,6 +282,21 @@
 						<span class="stat-label">minutes focused</span>
 					</div>
 				</div>
+
+				{#if getSortedTaskStats().length > 0}
+					<div class="task-stats-section">
+						<h4>Time by Task</h4>
+						<div class="task-stats-list">
+							{#each getSortedTaskStats() as [taskName, minutes] (taskName)}
+								<div class="task-stat-item">
+									<span class="task-stat-name">{taskName}</span>
+									<span class="task-stat-time">{formatMinutes(minutes)}</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
 				<button class="btn btn-ghost danger" onclick={resetStats}>Reset Statistics</button>
 			</section>
 
@@ -265,6 +382,13 @@
 		font-size: 0.8125rem;
 		color: var(--color-warm-gray-500);
 		margin: 0 0 1rem;
+	}
+
+	.section-hint {
+		font-size: 0.75rem;
+		color: var(--color-warm-gray-400);
+		margin: 0.5rem 0 0;
+		font-style: italic;
 	}
 
 	.gradations-list {
@@ -434,17 +558,99 @@
 		background: rgba(224, 123, 103, 0.1);
 	}
 
+	.cooldown-settings {
+		margin-top: 0.75rem;
+		padding: 0.75rem;
+		background: var(--color-cooldown-light);
+		border-radius: 12px;
+	}
+
+	.setting-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0;
+		font-size: 0.875rem;
+		color: var(--color-warm-gray-700);
+	}
+
+	.duration-input-wrapper {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.duration-input {
+		width: 70px;
+		padding: 0.5rem 0.75rem;
+		font-size: 0.875rem;
+		text-align: center;
+	}
+
+	.duration-suffix {
+		font-size: 0.875rem;
+		color: var(--color-warm-gray-500);
+	}
+
+	.task-stats-section {
+		margin: 1rem 0;
+	}
+
+	.task-stats-section h4 {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: var(--color-warm-gray-600);
+		margin: 0 0 0.5rem;
+	}
+
+	.task-stats-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		max-height: 160px;
+		overflow-y: auto;
+	}
+
+	.task-stat-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0.75rem;
+		background: var(--color-warm-gray-50);
+		border-radius: 8px;
+		font-size: 0.8125rem;
+	}
+
+	.task-stat-name {
+		flex: 1;
+		color: var(--color-warm-gray-700);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		margin-right: 0.75rem;
+	}
+
+	.task-stat-time {
+		color: var(--color-coral-500);
+		font-weight: 600;
+		flex-shrink: 0;
+	}
+
 	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	@keyframes slideUp {
-		from { 
+		from {
 			opacity: 0;
 			transform: translateY(20px) scale(0.98);
 		}
-		to { 
+		to {
 			opacity: 1;
 			transform: translateY(0) scale(1);
 		}

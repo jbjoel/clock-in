@@ -5,10 +5,14 @@ A minimal, focused timer app to help you stay on task. Built with Svelte 5 and S
 ## Features
 
 - **Customizable duration presets** - Choose from preset durations (default: 1, 5, 10, 20, 40 minutes) or configure your own
-- **Task tracking** - Name your current task to stay focused
+- **Auto-advance** - After completing a timer, automatically preloads the next duration in the sequence
+- **Auto-start mode** - Optional setting to automatically start the next timer without any input required
+- **Cooldown / Rest periods** - Configurable rest timer (default 2 minutes) between focus sessions with calming blue theme and rest prompts
+- **Task tracking with history** - Name your current task, with dropdown to quickly select from previous tasks
+- **Per-task statistics** - Track total focus time per task, viewable in settings
 - **Completion sounds** - Three built-in sounds (chime, bell, digital) generated via Web Audio API
-- **Progress tracking** - Records completion stats per duration
-- **Persistent settings** - All preferences and stats saved to localStorage
+- **Progress tracking** - Records completion stats per duration and per task
+- **Persistent settings** - All preferences, tasks, and stats saved to localStorage
 
 ## Getting Started
 

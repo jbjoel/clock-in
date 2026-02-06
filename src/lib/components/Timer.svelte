@@ -1,13 +1,23 @@
 <script lang="ts">
 	import { timer, formattedTime, progress } from '$lib/stores/timer';
 
-	const { isComplete = false } = $props<{ isComplete?: boolean }>();
+	const { isComplete = false, isCooldown = false } = $props<{
+		isComplete?: boolean;
+		isCooldown?: boolean;
+	}>();
 
 	const circumference = 2 * Math.PI * 140;
 	const strokeDashoffset = $derived(circumference - ($progress / 100) * circumference);
+
+	// Determine stroke color based on state
+	const strokeColor = $derived(() => {
+		if (isComplete) return 'var(--color-success)';
+		if (isCooldown) return 'var(--color-cooldown)';
+		return 'var(--color-coral-500)';
+	});
 </script>
 
-<div class="timer-container" class:timer-complete={isComplete}>
+<div class="timer-container" class:timer-complete={isComplete} class:timer-cooldown={isCooldown}>
 	<svg class="progress-ring" width="320" height="320" viewBox="0 0 320 320">
 		<!-- Background circle -->
 		<circle
@@ -16,7 +26,7 @@
 			cy="160"
 			r="140"
 			fill="none"
-			stroke="var(--color-warm-gray-200)"
+			stroke={isCooldown ? 'var(--color-cooldown-light)' : 'var(--color-warm-gray-200)'}
 			stroke-width="8"
 		/>
 		<!-- Progress circle -->
@@ -26,7 +36,7 @@
 			cy="160"
 			r="140"
 			fill="none"
-			stroke={isComplete ? 'var(--color-success)' : 'var(--color-coral-500)'}
+			stroke={strokeColor()}
 			stroke-width="8"
 			stroke-dasharray={circumference}
 			stroke-dashoffset={strokeDashoffset}
@@ -34,7 +44,15 @@
 	</svg>
 	<div class="timer-text">
 		<span class="timer-display">{$formattedTime}</span>
-		{#if $timer.isRunning}
+		{#if isCooldown}
+			{#if $timer.isRunning}
+				<span class="timer-status cooldown">resting...</span>
+			{:else if isComplete}
+				<span class="timer-status success">rest complete!</span>
+			{:else}
+				<span class="timer-status cooldown">time to rest</span>
+			{/if}
+		{:else if $timer.isRunning}
 			<span class="timer-status">focusing...</span>
 		{:else if isComplete}
 			<span class="timer-status success">complete!</span>
@@ -99,8 +117,17 @@
 		font-weight: 600;
 	}
 
+	.timer-status.cooldown {
+		color: var(--color-cooldown);
+		font-weight: 500;
+	}
+
 	.timer-complete .timer-display {
 		color: var(--color-success);
+	}
+
+	.timer-cooldown .timer-display {
+		color: var(--color-cooldown);
 	}
 
 	.timer-complete {
@@ -108,9 +135,15 @@
 	}
 
 	@keyframes celebrate {
-		0% { transform: scale(1); }
-		50% { transform: scale(1.03); }
-		100% { transform: scale(1); }
+		0% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.03);
+		}
+		100% {
+			transform: scale(1);
+		}
 	}
 
 	@media (max-width: 400px) {
