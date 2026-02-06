@@ -1,42 +1,46 @@
-# sv
+# Clock In
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A minimal, focused timer app to help you stay on task. Built with Svelte 5 and SvelteKit.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Customizable duration presets** - Choose from preset durations (default: 1, 5, 10, 20, 40 minutes) or configure your own
+- **Task tracking** - Name your current task to stay focused
+- **Completion sounds** - Three built-in sounds (chime, bell, digital) generated via Web Audio API
+- **Progress tracking** - Records completion stats per duration
+- **Persistent settings** - All preferences and stats saved to localStorage
+
+## Getting Started
+
+Install dependencies:
 
 ```sh
-# create a new project
-npx sv create my-app
+npm install
 ```
 
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv create --template minimal --types ts --add tailwindcss="plugins:typography" prettier --install npm .
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Start the development server:
 
 ```sh
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-To create a production version of your app:
+## Scripts
 
-```sh
-npm run build
-```
+| Command           | Description                    |
+| ----------------- | ------------------------------ |
+| `npm run dev`     | Start development server       |
+| `npm run build`   | Build for production           |
+| `npm run preview` | Preview production build       |
+| `npm run check`   | Run Svelte type checking       |
+| `npm run lint`    | Check formatting with Prettier |
+| `npm run format`  | Format code with Prettier      |
 
-You can preview the production build with `npm run preview`.
+## Tech Stack
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- [Svelte 5](https://svelte.dev/) with runes
+- [SvelteKit](https://kit.svelte.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+- Web Audio API for sounds
