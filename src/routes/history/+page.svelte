@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { taskStats, taskHistory } from '$lib/stores/timer';
+	import { taskStats } from '$lib/stores/timer';
 	import { buildTree, formatMinutes, type TreeNode } from '$lib/utils/taskTree';
 
 	const stats = $derived($taskStats);
@@ -38,49 +38,46 @@
 	const totalMinutes = $derived.by(() => {
 		return Object.values(stats).reduce((sum, m) => sum + m, 0);
 	});
+
+	const taskCount = $derived(Object.keys(stats).length);
 </script>
 
-<div class="history-page">
+<div class="page">
 	<header class="page-header">
-		<a href="/" class="back-link">
-			<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-				<path
-					d="M12 4L6 10L12 16"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
+		<a href="/" class="back-link" aria-label="Back to timer">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+				<path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 			</svg>
-			Back
 		</a>
-		<h1>Task History</h1>
+		<h1>History</h1>
 	</header>
 
-	{#if Object.keys(stats).length === 0}
-		<div class="empty-state">
-			<p>No task history yet.</p>
-			<p class="empty-hint">Complete a timer with a task name to see your history here.</p>
+	{#if taskCount === 0}
+		<div class="empty">
+			<p class="empty-title">No sessions yet</p>
+			<p class="empty-sub">Complete a focus session with a task name to see it here.</p>
 		</div>
 	{:else}
-		<div class="summary">
-			<div class="summary-stat">
-				<span class="summary-value">{formatMinutes(totalMinutes)}</span>
-				<span class="summary-label">Total focused</span>
+		<div class="stats-bar">
+			<div class="stat">
+				<span class="stat-val">{formatMinutes(totalMinutes)}</span>
+				<span class="stat-lbl">Total</span>
 			</div>
-			<div class="summary-stat">
-				<span class="summary-value">{Object.keys(stats).length}</span>
-				<span class="summary-label">Tasks</span>
+			<div class="stat-divider"></div>
+			<div class="stat">
+				<span class="stat-val">{taskCount}</span>
+				<span class="stat-lbl">Tasks</span>
 			</div>
-			<div class="summary-stat">
-				<span class="summary-value">{tree.length}</span>
-				<span class="summary-label">Top-level</span>
+			<div class="stat-divider"></div>
+			<div class="stat">
+				<span class="stat-val">{tree.length}</span>
+				<span class="stat-lbl">Projects</span>
 			</div>
 		</div>
 
-		<div class="tree-controls">
-			<button class="control-btn" onclick={expandAll} type="button">Expand all</button>
-			<button class="control-btn" onclick={collapseAll} type="button">Collapse all</button>
+		<div class="toolbar">
+			<button class="tool-btn" onclick={expandAll} type="button">Expand</button>
+			<button class="tool-btn" onclick={collapseAll} type="button">Collapse</button>
 		</div>
 
 		<div class="tree">
@@ -92,47 +89,40 @@
 </div>
 
 {#snippet treeNode(node: TreeNode, depth: number)}
-	<div class="tree-item" style="--depth: {depth}">
+	<div class="node" style="--depth: {depth}">
 		<button
-			class="tree-item-btn"
-			class:has-children={node.children.length > 0}
+			class="node-row"
+			class:expandable={node.children.length > 0}
 			onclick={() => node.children.length > 0 && toggleExpand(node.path)}
 			type="button"
 		>
-			<span class="tree-item-left">
+			<span class="node-left">
 				{#if node.children.length > 0}
 					<svg
-						class="expand-icon"
-						class:expanded={expandedPaths.has(node.path)}
-						width="12"
-						height="12"
+						class="node-arrow"
+						class:open={expandedPaths.has(node.path)}
+						width="10"
+						height="10"
 						viewBox="0 0 16 16"
 						fill="none"
 					>
-						<path
-							d="M6 4L10 8L6 12"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
+						<path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 					</svg>
 				{:else}
-					<span class="expand-spacer"></span>
+					<span class="node-dot"></span>
 				{/if}
-				<span class="tree-item-name">{node.name}</span>
+				<span class="node-name">{node.name}</span>
 			</span>
-			<span class="tree-item-right">
+			<span class="node-right">
 				{#if node.directMinutes > 0 && node.children.length > 0}
-					<span class="direct-time">{formatMinutes(node.directMinutes)}</span>
-					<span class="time-sep">/</span>
+					<span class="node-direct">{formatMinutes(node.directMinutes)}</span>
 				{/if}
-				<span class="total-time">{formatMinutes(node.totalMinutes)}</span>
+				<span class="node-total">{formatMinutes(node.totalMinutes)}</span>
 			</span>
 		</button>
 
 		{#if node.children.length > 0 && expandedPaths.has(node.path)}
-			<div class="tree-children">
+			<div class="node-children">
 				{#each node.children.sort((a, b) => b.totalMinutes - a.totalMinutes) as child (child.path)}
 					{@render treeNode(child, depth + 1)}
 				{/each}
@@ -142,201 +132,223 @@
 {/snippet}
 
 <style>
-	.history-page {
-		max-width: 600px;
+	.page {
+		max-width: 500px;
 		margin: 0 auto;
-		padding: 1rem;
+		padding: 1.5rem;
 		min-height: 100vh;
 	}
 
 	.page-header {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
-		padding: 0.5rem 0 1.5rem;
+		gap: 0.75rem;
+		padding: 0 0 2rem;
 	}
 
 	.page-header h1 {
-		font-family: var(--font-display);
-		font-size: 1.5rem;
-		font-weight: 800;
-		color: var(--color-warm-gray-800);
+		font-family: var(--font-serif);
+		font-size: 1.375rem;
+		font-weight: 400;
+		color: var(--color-ink);
 		margin: 0;
 	}
 
 	.back-link {
 		display: flex;
 		align-items: center;
-		gap: 0.25rem;
-		color: var(--color-coral-500);
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		color: var(--color-ink-muted);
 		text-decoration: none;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 0.875rem;
-		padding: 0.5rem 0.75rem;
-		border-radius: 10px;
-		transition: background 0.15s;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		transition: all 0.15s var(--ease-out);
 	}
 
 	.back-link:hover {
-		background: var(--color-warm-gray-50);
-	}
-
-	.empty-state {
-		text-align: center;
-		padding: 4rem 2rem;
-		color: var(--color-warm-gray-500);
-	}
-
-	.empty-hint {
-		font-size: 0.875rem;
-		color: var(--color-warm-gray-400);
-	}
-
-	.summary {
-		display: flex;
-		gap: 1rem;
-		padding: 1.25rem;
+		color: var(--color-ink);
 		background: white;
-		border-radius: 16px;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-		margin-bottom: 1.5rem;
+		border-color: var(--color-border-strong);
+		box-shadow: var(--shadow-xs);
 	}
 
-	.summary-stat {
-		flex: 1;
+	.empty {
+		text-align: center;
+		padding: 5rem 2rem;
+	}
+
+	.empty-title {
+		font-family: var(--font-serif);
+		font-size: 1.125rem;
+		color: var(--color-ink-muted);
+		margin: 0 0 0.5rem;
+	}
+
+	.empty-sub {
+		font-size: 0.8125rem;
+		color: var(--color-ink-faint);
+		margin: 0;
+	}
+
+	.stats-bar {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.25rem;
+		padding: 1rem 1.5rem;
+		background: white;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		margin-bottom: 1.25rem;
+	}
+
+	.stat {
 		text-align: center;
 	}
 
-	.summary-value {
+	.stat-val {
 		display: block;
-		font-family: var(--font-display);
-		font-size: 1.25rem;
-		font-weight: 800;
-		color: var(--color-coral-500);
+		font-family: var(--font-mono);
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--color-ink);
+		letter-spacing: -0.02em;
 	}
 
-	.summary-label {
+	.stat-lbl {
 		display: block;
-		font-size: 0.75rem;
-		color: var(--color-warm-gray-500);
-		margin-top: 0.25rem;
+		font-size: 0.625rem;
+		color: var(--color-ink-faint);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		margin-top: 0.125rem;
 	}
 
-	.tree-controls {
+	.stat-divider {
+		width: 1px;
+		height: 24px;
+		background: var(--color-border);
+	}
+
+	.toolbar {
 		display: flex;
-		gap: 0.5rem;
-		margin-bottom: 1rem;
+		gap: 0.375rem;
+		margin-bottom: 0.75rem;
 	}
 
-	.control-btn {
-		background: var(--color-warm-gray-100);
-		border: none;
-		padding: 0.375rem 0.75rem;
-		border-radius: 8px;
+	.tool-btn {
+		background: none;
+		border: 1px solid var(--color-border);
+		padding: 0.25rem 0.625rem;
+		border-radius: var(--radius-sm);
 		cursor: pointer;
-		font-family: var(--font-display);
-		font-size: 0.75rem;
-		color: var(--color-warm-gray-600);
+		font-family: var(--font-body);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		color: var(--color-ink-muted);
 		transition: all 0.15s;
+		letter-spacing: 0.01em;
 	}
 
-	.control-btn:hover {
-		background: var(--color-warm-gray-200);
+	.tool-btn:hover {
+		background: white;
+		border-color: var(--color-border-strong);
+		color: var(--color-ink-soft);
 	}
 
 	.tree {
 		background: white;
-		border-radius: 16px;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
 		overflow: hidden;
 	}
 
-	.tree-item {
-		border-bottom: 1px solid var(--color-warm-gray-100);
+	.node + .node {
+		border-top: 1px solid var(--color-border);
 	}
 
-	.tree-item:last-child {
-		border-bottom: none;
-	}
-
-	.tree-item-btn {
+	.node-row {
 		width: 100%;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.75rem 1rem;
-		padding-left: calc(1rem + var(--depth) * 1.25rem);
+		padding: 0.625rem 0.875rem;
+		padding-left: calc(0.875rem + var(--depth) * 1rem);
 		background: none;
 		border: none;
 		cursor: default;
-		font-family: var(--font-display);
-		font-size: 0.875rem;
-		color: var(--color-warm-gray-700);
-		transition: background 0.15s;
+		font-family: var(--font-body);
+		font-size: 0.8125rem;
+		color: var(--color-ink-soft);
+		transition: background 0.1s;
 		text-align: left;
 	}
 
-	.tree-item-btn.has-children {
+	.node-row.expandable {
 		cursor: pointer;
 	}
 
-	.tree-item-btn.has-children:hover {
-		background: var(--color-warm-gray-50);
+	.node-row.expandable:hover {
+		background: var(--color-paper-warm);
 	}
 
-	.tree-item-left {
+	.node-left {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 		min-width: 0;
 	}
 
-	.expand-icon {
+	.node-arrow {
 		flex-shrink: 0;
-		color: var(--color-warm-gray-400);
-		transition: transform 0.2s;
+		color: var(--color-ink-faint);
+		transition: transform 0.2s var(--ease-out);
 	}
 
-	.expand-icon.expanded {
+	.node-arrow.open {
 		transform: rotate(90deg);
 	}
 
-	.expand-spacer {
-		width: 12px;
+	.node-dot {
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		background: var(--color-ink-faint);
 		flex-shrink: 0;
+		margin: 0 3px;
 	}
 
-	.tree-item-name {
+	.node-name {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-weight: 500;
 	}
 
-	.tree-item-right {
+	.node-right {
 		display: flex;
 		align-items: center;
-		gap: 0.25rem;
+		gap: 0.5rem;
 		flex-shrink: 0;
 	}
 
-	.direct-time {
-		font-size: 0.7rem;
-		color: var(--color-warm-gray-400);
+	.node-direct {
+		font-size: 0.625rem;
+		color: var(--color-ink-faint);
+		font-family: var(--font-mono);
 	}
 
-	.time-sep {
-		font-size: 0.7rem;
-		color: var(--color-warm-gray-300);
-	}
-
-	.total-time {
-		font-size: 0.75rem;
+	.node-total {
+		font-size: 0.6875rem;
 		font-weight: 600;
-		color: var(--color-coral-500);
+		color: var(--color-ember);
+		font-family: var(--font-mono);
+		letter-spacing: -0.02em;
 	}
 
-	.tree-children {
-		border-top: 1px solid var(--color-warm-gray-50);
+	.node-children {
+		border-top: 1px solid var(--color-border);
 	}
 </style>

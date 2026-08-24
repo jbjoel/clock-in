@@ -10,7 +10,6 @@
 	let inputElement: HTMLInputElement | undefined = $state();
 	let selectedIndex = $state(-1);
 
-	// Path-aware suggestions
 	const suggestions = $derived.by(() => {
 		return getAutocompleteSuggestions(taskName, history, stats);
 	});
@@ -35,7 +34,6 @@
 
 	function selectTask(task: string, isFolder: boolean) {
 		if (isFolder) {
-			// Navigate into folder
 			timer.setTaskName(task + '/');
 			showDropdown = true;
 			selectedIndex = -1;
@@ -71,12 +69,10 @@
 		}
 	}
 
-	// Breadcrumb segments from current input
 	const breadcrumbs = $derived.by(() => {
 		const trimmed = taskName.trim();
 		if (!trimmed.includes('/')) return [];
 		const parts = trimmed.split('/');
-		// Show all but the last segment as breadcrumbs
 		return parts.slice(0, -1).map((part, i) => ({
 			label: part,
 			path: parts.slice(0, i + 1).join('/')
@@ -88,7 +84,8 @@
 	{#if breadcrumbs.length > 0}
 		<div class="breadcrumbs">
 			<button
-				class="breadcrumb-item breadcrumb-root"
+				class="crumb crumb-root"
+				aria-label="All tasks"
 				onmousedown={() => {
 					timer.setTaskName('');
 					showDropdown = true;
@@ -96,12 +93,14 @@
 				}}
 				type="button"
 			>
-				All
+				<svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+					<path d="M2 6L8 2L14 6V14H2V6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+				</svg>
 			</button>
 			{#each breadcrumbs as crumb (crumb.path)}
-				<span class="breadcrumb-sep">/</span>
+				<span class="crumb-sep">/</span>
 				<button
-					class="breadcrumb-item"
+					class="crumb"
 					onmousedown={() => {
 						timer.setTaskName(crumb.path + '/');
 						showDropdown = true;
@@ -119,8 +118,8 @@
 		<input
 			bind:this={inputElement}
 			type="text"
-			class="input-field task-input"
-			placeholder="What are you focusing on?"
+			class="task-input"
+			placeholder="What are you working on?"
 			value={taskName}
 			oninput={handleInput}
 			onfocus={handleFocus}
@@ -128,6 +127,7 @@
 			onkeydown={handleKeydown}
 			maxlength="200"
 			autocomplete="off"
+			spellcheck="false"
 		/>
 		{#if history.length > 0}
 			<button
@@ -139,14 +139,8 @@
 				aria-label="Show recent tasks"
 				type="button"
 			>
-				<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-					<path
-						d="M4 6L8 10L12 6"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
+				<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+					<path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 				</svg>
 			</button>
 		{/if}
@@ -163,29 +157,17 @@
 				>
 					<span class="item-left">
 						{#if item.isFolder}
-							<svg class="folder-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
-								<path
-									d="M2 4C2 3.44772 2.44772 3 3 3H6.5L8 5H13C13.5523 5 14 5.44772 14 6V12C14 12.5523 13.5523 13 13 13H3C2.44772 13 2 12.5523 2 12V4Z"
-									stroke="currentColor"
-									stroke-width="1.5"
-								/>
-							</svg>
+							<span class="folder-dot"></span>
 						{/if}
-						<span class="task-name">{item.displayName}</span>
+						<span class="item-name">{item.displayName}</span>
 					</span>
 					<span class="item-right">
 						{#if item.minutes > 0}
-							<span class="task-stats">{formatMinutes(item.minutes)}</span>
+							<span class="item-time">{formatMinutes(item.minutes)}</span>
 						{/if}
 						{#if item.isFolder}
-							<svg class="chevron-icon" width="12" height="12" viewBox="0 0 16 16" fill="none">
-								<path
-									d="M6 4L10 8L6 12"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								/>
+							<svg class="item-chevron" width="10" height="10" viewBox="0 0 16 16" fill="none">
+								<path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 							</svg>
 						{/if}
 					</span>
@@ -198,7 +180,7 @@
 <style>
 	.task-input-container {
 		width: 100%;
-		max-width: 360px;
+		max-width: 340px;
 		position: relative;
 	}
 
@@ -206,30 +188,39 @@
 		display: flex;
 		align-items: center;
 		gap: 0.25rem;
-		padding: 0 0.5rem 0.5rem;
-		font-size: 0.75rem;
-		font-family: var(--font-display);
+		padding: 0 0.25rem 0.5rem;
+		font-size: 0.6875rem;
+		font-family: var(--font-body);
 	}
 
-	.breadcrumb-item {
-		background: var(--color-warm-gray-100);
-		border: none;
-		padding: 0.25rem 0.5rem;
-		border-radius: 6px;
+	.crumb {
+		background: var(--color-paper-warm);
+		border: 1px solid var(--color-border);
+		padding: 0.2rem 0.5rem;
+		border-radius: var(--radius-sm);
 		cursor: pointer;
-		color: var(--color-warm-gray-600);
-		font-size: 0.75rem;
-		font-family: var(--font-display);
-		transition: all 0.15s;
+		color: var(--color-ink-muted);
+		font-size: 0.6875rem;
+		font-family: var(--font-body);
+		font-weight: 500;
+		transition: all 0.15s var(--ease-out);
+		display: flex;
+		align-items: center;
 	}
 
-	.breadcrumb-item:hover {
-		background: var(--color-warm-gray-200);
-		color: var(--color-warm-gray-800);
+	.crumb:hover {
+		background: var(--color-paper-deep);
+		color: var(--color-ink-soft);
+		border-color: var(--color-border-strong);
 	}
 
-	.breadcrumb-sep {
-		color: var(--color-warm-gray-400);
+	.crumb-root {
+		padding: 0.25rem 0.375rem;
+	}
+
+	.crumb-sep {
+		color: var(--color-ink-faint);
+		opacity: 0.5;
 	}
 
 	.input-wrapper {
@@ -239,60 +230,69 @@
 	}
 
 	.task-input {
-		font-family: var(--font-display);
-		font-size: 1rem;
-		padding: 0.875rem 2.5rem 0.875rem 1.25rem;
-		border: 2px solid var(--color-warm-gray-200);
-		border-radius: 16px;
+		font-family: var(--font-body);
+		font-size: 0.9375rem;
+		font-weight: 500;
+		padding: 0.75rem 2.25rem 0.75rem 1rem;
+		border: 1.5px solid var(--color-border-strong);
+		border-radius: var(--radius-lg);
 		background: white;
-		color: var(--color-warm-gray-800);
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		color: var(--color-ink);
+		transition: all 0.2s var(--ease-out);
 		width: 100%;
 		text-align: center;
+		box-shadow: var(--shadow-inset);
 	}
 
 	.task-input::placeholder {
-		color: var(--color-warm-gray-400);
+		color: var(--color-ink-faint);
+		font-weight: 400;
 	}
 
 	.task-input:focus {
 		outline: none;
-		border-color: var(--color-coral-400);
-		box-shadow: 0 0 0 3px rgba(224, 123, 103, 0.15);
+		border-color: var(--color-ember);
+		box-shadow: 0 0 0 3px var(--color-ember-glow);
 	}
 
 	.dropdown-trigger {
 		position: absolute;
-		right: 0.75rem;
+		right: 0.625rem;
 		background: none;
 		border: none;
-		padding: 0.5rem;
+		padding: 0.375rem;
 		cursor: pointer;
-		color: var(--color-warm-gray-400);
+		color: var(--color-ink-faint);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 6px;
+		border-radius: var(--radius-sm);
 		transition: all 0.15s;
 	}
 
 	.dropdown-trigger:hover {
-		color: var(--color-warm-gray-600);
-		background: var(--color-warm-gray-100);
+		color: var(--color-ink-muted);
+		background: var(--color-paper-warm);
 	}
 
 	.dropdown {
 		position: absolute;
-		top: calc(100% + 4px);
+		top: calc(100% + 6px);
 		left: 0;
 		right: 0;
 		background: white;
-		border: 2px solid var(--color-warm-gray-200);
-		border-radius: 12px;
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+		border: 1.5px solid var(--color-border-strong);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-lg);
 		z-index: 50;
-		max-height: 280px;
+		max-height: 240px;
 		overflow-y: auto;
+		animation: slideDown 0.15s var(--ease-out);
+	}
+
+	@keyframes slideDown {
+		from { opacity: 0; transform: translateY(-4px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 
 	.dropdown-item {
@@ -300,33 +300,25 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
+		gap: 0.5rem;
+		padding: 0.625rem 0.875rem;
 		background: none;
 		border: none;
 		cursor: pointer;
 		text-align: left;
-		font-family: var(--font-display);
-		font-size: 0.875rem;
-		color: var(--color-warm-gray-700);
-		transition: background 0.15s;
+		font-family: var(--font-body);
+		font-size: 0.8125rem;
+		color: var(--color-ink-soft);
+		transition: background 0.1s;
 	}
 
-	.dropdown-item:first-child {
-		border-radius: 10px 10px 0 0;
-	}
-
-	.dropdown-item:last-child {
-		border-radius: 0 0 10px 10px;
-	}
-
-	.dropdown-item:only-child {
-		border-radius: 10px;
-	}
+	.dropdown-item:first-child { border-radius: 14px 14px 0 0; }
+	.dropdown-item:last-child { border-radius: 0 0 14px 14px; }
+	.dropdown-item:only-child { border-radius: 14px; }
 
 	.dropdown-item:hover,
 	.dropdown-item.selected {
-		background: var(--color-warm-gray-50);
+		background: var(--color-paper-warm);
 	}
 
 	.item-left {
@@ -337,12 +329,15 @@
 		min-width: 0;
 	}
 
-	.folder-icon {
-		color: var(--color-coral-400);
+	.folder-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--color-ember);
 		flex-shrink: 0;
 	}
 
-	.task-name {
+	.item-name {
 		flex: 1;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -352,17 +347,19 @@
 	.item-right {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.375rem;
 		flex-shrink: 0;
 	}
 
-	.task-stats {
-		font-size: 0.75rem;
-		color: var(--color-coral-500);
+	.item-time {
+		font-size: 0.6875rem;
+		color: var(--color-ember);
 		font-weight: 600;
+		font-family: var(--font-mono);
+		letter-spacing: -0.02em;
 	}
 
-	.chevron-icon {
-		color: var(--color-warm-gray-400);
+	.item-chevron {
+		color: var(--color-ink-faint);
 	}
 </style>

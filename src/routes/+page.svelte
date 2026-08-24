@@ -145,41 +145,17 @@
 <div class="app">
 	<header class="header">
 		<div class="logo">
-			<svg class="logo-icon" width="28" height="28" viewBox="0 0 28 28" fill="none">
-				<circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="2.5" />
-				<path
-					d="M14 8V14L18 16"
-					stroke="currentColor"
-					stroke-width="2.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-			</svg>
-			<span class="logo-text">Clock In</span>
+			<span class="logo-text">clock in</span>
 		</div>
 		<div class="header-actions">
-		<a class="history-btn" href="/history" aria-label="View task history">
-			<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-				<path
-					d="M3 3V9H3.5M3.5 9C4.32 6.94 5.75 5.22 7.61 4.1C9.47 2.98 11.65 2.52 13.8 2.79C15.95 3.06 17.95 4.04 19.47 5.57C20.99 7.1 21.96 9.1 22.23 11.25"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-				<path d="M3.5 9H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-				<circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5" />
-				<path
-					d="M11 7V11L14 13"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
+		<a class="icon-btn" href="/history" aria-label="View task history">
+			<svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+				<path d="M10 2C5.58 2 2 5.58 2 10s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8Z" stroke="currentColor" stroke-width="1.5"/>
+				<path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 			</svg>
 		</a>
-		<button class="settings-btn" onclick={() => (settingsOpen = true)} aria-label="Open settings">
-			<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+		<button class="icon-btn" onclick={() => (settingsOpen = true)} aria-label="Open settings">
+			<svg width="18" height="18" viewBox="0 0 20 20" fill="none">
 				<path
 					d="M11 14C12.6569 14 14 12.6569 14 11C14 9.34315 12.6569 8 11 8C9.34315 8 8 9.34315 8 11C8 12.6569 9.34315 14 11 14Z"
 					stroke="currentColor"
@@ -279,15 +255,15 @@
 		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
-		padding: 1rem;
+		padding: 1.5rem;
 	}
 
 	.header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.5rem 0.5rem 1.5rem;
-		max-width: 600px;
+		padding: 0 0 2rem;
+		max-width: 500px;
 		width: 100%;
 		margin: 0 auto;
 	}
@@ -295,63 +271,41 @@
 	.logo {
 		display: flex;
 		align-items: center;
-		gap: 0.625rem;
-		color: var(--color-coral-500);
-	}
-
-	.logo-icon {
-		flex-shrink: 0;
 	}
 
 	.logo-text {
-		font-family: var(--font-display);
-		font-weight: 800;
-		font-size: 1.25rem;
-		letter-spacing: -0.02em;
+		font-family: var(--font-serif);
+		font-size: 1.375rem;
+		color: var(--color-ink);
+		letter-spacing: -0.01em;
 	}
 
-	.settings-btn {
-		background: white;
-		border: none;
-		padding: 0.625rem;
-		border-radius: 12px;
+	.icon-btn {
+		background: none;
+		border: 1px solid var(--color-border);
+		padding: 0.5rem;
+		border-radius: var(--radius-md);
 		cursor: pointer;
-		color: var(--color-warm-gray-500);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-		transition: all 0.2s;
-	}
-
-	.settings-btn:hover {
-		color: var(--color-warm-gray-700);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		transform: translateY(-1px);
-	}
-
-	.header-actions {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.history-btn {
-		background: white;
-		border: none;
-		padding: 0.625rem;
-		border-radius: 12px;
-		cursor: pointer;
-		color: var(--color-warm-gray-500);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-		transition: all 0.2s;
+		color: var(--color-ink-muted);
+		transition: all 0.2s var(--ease-out);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		text-decoration: none;
 	}
 
-	.history-btn:hover {
-		color: var(--color-warm-gray-700);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	.icon-btn:hover {
+		color: var(--color-ink);
+		border-color: var(--color-border-strong);
+		background: white;
+		box-shadow: var(--shadow-sm);
 		transform: translateY(-1px);
+	}
+
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
 	}
 
 	.main {
@@ -362,118 +316,119 @@
 		justify-content: center;
 		gap: 2rem;
 		padding: 1rem 0;
-		max-width: 600px;
+		max-width: 500px;
 		width: 100%;
 		margin: 0 auto;
 	}
 
 	.timer-wrapper {
-		padding: 1rem 0;
+		padding: 0.5rem 0;
 	}
 
 	.controls {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.625rem;
 		flex-wrap: wrap;
 		justify-content: center;
 	}
 
 	.footer {
 		text-align: center;
-		padding: 1.5rem 0;
-		color: var(--color-warm-gray-400);
-		font-size: 0.8125rem;
+		padding: 2rem 0 1rem;
+		color: var(--color-ink-faint);
+		font-size: 0.75rem;
+		letter-spacing: 0.02em;
 	}
 
 	.footer p {
 		margin: 0;
 	}
 
-	/* Cooldown message styles */
 	.cooldown-message {
 		text-align: center;
 		padding: 1rem;
 	}
 
 	.cooldown-title {
-		font-family: var(--font-display);
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: var(--color-cooldown);
-		margin: 0 0 0.5rem;
+		font-family: var(--font-serif);
+		font-size: 1.375rem;
+		color: var(--color-stone);
+		margin: 0 0 0.375rem;
 	}
 
 	.cooldown-hint {
-		font-size: 0.9375rem;
-		color: var(--color-warm-gray-500);
+		font-size: 0.875rem;
+		color: var(--color-ink-faint);
 		margin: 0;
 		font-style: italic;
 	}
 
-	/* Button styles scoped to this page */
+	/* Button overrides for this page */
 	.btn {
-		font-family: var(--font-display);
+		font-family: var(--font-body);
 		font-weight: 600;
 		border: none;
 		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: all 0.2s var(--ease-out);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
+		letter-spacing: -0.01em;
 	}
 
 	.btn:focus-visible {
-		outline: 2px solid var(--color-coral-500);
+		outline: 2px solid var(--color-ember);
 		outline-offset: 2px;
 	}
 
 	.btn-primary {
-		background: var(--color-coral-500);
-		color: white;
-		padding: 1rem 2.5rem;
-		border-radius: 9999px;
-		font-size: 1.125rem;
-		box-shadow: 0 4px 24px rgba(224, 123, 103, 0.25);
+		background: var(--color-ink);
+		color: var(--color-paper);
+		padding: 0.875rem 2.25rem;
+		border-radius: var(--radius-full);
+		font-size: 1rem;
+		box-shadow: var(--shadow-md);
 	}
 
 	.btn-primary:hover {
-		background: var(--color-coral-600);
+		background: var(--color-ink-soft);
 		transform: translateY(-1px);
-		box-shadow: 0 6px 28px rgba(224, 123, 103, 0.3);
+		box-shadow: var(--shadow-lg);
 	}
 
 	.btn-primary:active {
 		transform: translateY(0);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.btn-primary.btn-cooldown {
-		background: var(--color-cooldown);
-		box-shadow: 0 4px 24px rgba(91, 155, 213, 0.25);
+		background: var(--color-stone);
+		box-shadow: 0 4px 16px var(--color-stone-glow);
 	}
 
 	.btn-primary.btn-cooldown:hover {
 		background: var(--color-cooldown-dark);
-		box-shadow: 0 6px 28px rgba(91, 155, 213, 0.3);
 	}
 
 	.btn-primary.btn-cooldown:focus-visible {
-		outline-color: var(--color-cooldown);
+		outline-color: var(--color-stone);
 	}
 
 	.btn-secondary {
 		background: white;
-		color: var(--color-warm-gray-700);
-		padding: 1rem 1.75rem;
-		border-radius: 9999px;
-		font-size: 1rem;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-		border: 1px solid var(--color-warm-gray-200);
+		color: var(--color-ink-soft);
+		padding: 0.875rem 1.5rem;
+		border-radius: var(--radius-full);
+		font-size: 0.9375rem;
+		box-shadow: var(--shadow-xs);
+		border: 1.5px solid var(--color-border-strong);
 	}
 
 	.btn-secondary:hover {
-		background: var(--color-cream-100);
-		border-color: var(--color-coral-300);
+		background: var(--color-paper-warm);
+		border-color: var(--color-ink-faint);
+		transform: translateY(-1px);
 	}
 
 	@media (max-width: 480px) {
@@ -482,12 +437,12 @@
 		}
 
 		.btn-primary {
-			padding: 0.875rem 2rem;
-			font-size: 1rem;
+			padding: 0.75rem 1.75rem;
+			font-size: 0.9375rem;
 		}
 
 		.btn-secondary {
-			padding: 0.875rem 1.5rem;
+			padding: 0.75rem 1.25rem;
 		}
 	}
 </style>

@@ -23,24 +23,17 @@
 		{@const completed = isCompleted(duration)}
 		{@const count = getCompletionCount(duration)}
 		<button
-			class="duration-pill"
+			class="pill"
 			class:selected={selectedDuration === duration}
 			class:completed={completed && selectedDuration !== duration}
 			class:uncompleted={!completed && selectedDuration !== duration}
 			onclick={() => selectDuration(duration)}
 			aria-pressed={selectedDuration === duration}
 		>
-			<span class="duration-value">{duration}</span>
-			<span class="duration-unit">min</span>
-			{#if completed && selectedDuration !== duration}
-				<span class="completion-badge" title="{count} completed">
-					<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-						<path d="M2 5L4 7L8 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</span>
-			{/if}
-			{#if count > 1}
-				<span class="count-badge">{count}</span>
+			<span class="pill-value">{duration}</span>
+			<span class="pill-unit">m</span>
+			{#if count > 0 && selectedDuration !== duration}
+				<span class="pill-count">{count}</span>
 			{/if}
 		</button>
 	{/each}
@@ -50,114 +43,101 @@
 	.duration-picker {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.75rem;
+		gap: 0.5rem;
 		justify-content: center;
-		padding: 0.5rem;
+		padding: 0.25rem;
 	}
 
-	.duration-pill {
-		font-family: var(--font-display);
+	.pill {
+		font-family: var(--font-body);
 		font-weight: 600;
-		font-size: 0.9375rem;
-		padding: 0.75rem 1.25rem;
-		border-radius: 9999px;
-		border: 2px solid var(--color-warm-gray-200);
+		font-size: 0.8125rem;
+		padding: 0.5rem 0.875rem;
+		border-radius: var(--radius-full);
+		border: 1.5px solid var(--color-border-strong);
 		background: white;
-		color: var(--color-warm-gray-600);
+		color: var(--color-ink-muted);
 		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: all 0.2s var(--ease-out);
 		position: relative;
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.125rem;
 	}
 
-	.duration-pill:hover {
-		border-color: var(--color-coral-300);
-		color: var(--color-coral-600);
+	.pill:hover {
+		border-color: var(--color-ember);
+		color: var(--color-ember);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.pill.selected {
+		border-color: var(--color-ink);
+		background: var(--color-ink);
+		color: var(--color-paper);
+		box-shadow: var(--shadow-md);
 		transform: translateY(-1px);
 	}
 
-	.duration-pill.selected {
-		border-color: var(--color-coral-500);
-		background: var(--color-coral-500);
-		color: white;
-		box-shadow: 0 4px 24px rgba(224, 123, 103, 0.25);
+	.pill.selected:hover {
+		background: var(--color-ink-soft);
+		border-color: var(--color-ink-soft);
 	}
 
-	.duration-pill.selected:hover {
-		background: var(--color-coral-600);
-		border-color: var(--color-coral-600);
-		color: white;
+	.pill.completed {
+		border-color: var(--color-sage);
+		background: var(--color-sage-light);
+		color: var(--color-ink-soft);
 	}
 
-	.duration-pill.completed {
-		border-color: var(--color-success);
-		background: var(--color-success-soft);
-		color: var(--color-warm-gray-700);
+	.pill.completed:hover {
+		border-color: var(--color-sage);
+		box-shadow: 0 2px 8px var(--color-sage-glow);
 	}
 
-	.duration-pill.completed:hover {
-		border-color: var(--color-success);
-		background: rgba(107, 191, 138, 0.2);
+	.pill.uncompleted {
+		opacity: 0.5;
 	}
 
-	.duration-pill.uncompleted {
-		opacity: 0.65;
-	}
-
-	.duration-pill.uncompleted:hover {
+	.pill.uncompleted:hover {
 		opacity: 1;
 	}
 
-	.duration-value {
+	.pill-value {
 		font-weight: 700;
+		font-size: 0.875rem;
 	}
 
-	.duration-unit {
+	.pill-unit {
 		font-weight: 500;
-		opacity: 0.8;
+		opacity: 0.6;
+		font-size: 0.75rem;
 	}
 
-	.completion-badge {
+	.pill-count {
 		position: absolute;
-		top: -4px;
-		right: -4px;
-		width: 18px;
-		height: 18px;
-		background: var(--color-success);
+		top: -5px;
+		right: -5px;
+		background: var(--color-ink-muted);
 		color: white;
-		border-radius: 50%;
-		border: 2px solid white;
+		font-size: 0.5625rem;
+		font-weight: 700;
+		width: 16px;
+		height: 16px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	}
-
-	.count-badge {
-		position: absolute;
-		bottom: -6px;
-		right: 50%;
-		transform: translateX(50%);
-		background: var(--color-warm-gray-600);
-		color: white;
-		font-size: 0.625rem;
-		font-weight: 700;
-		padding: 0.125rem 0.375rem;
-		border-radius: 9999px;
-		min-width: 1rem;
-		text-align: center;
+		border-radius: 50%;
 		border: 2px solid white;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		box-shadow: var(--shadow-xs);
 	}
 
-	.duration-pill.selected .count-badge {
-		background: white;
-		color: var(--color-coral-500);
+	.pill.selected .pill-count {
+		background: var(--color-ember);
 	}
 
-	.duration-pill.completed .count-badge {
-		background: var(--color-success);
+	.pill.completed .pill-count {
+		background: var(--color-sage);
 	}
 </style>
