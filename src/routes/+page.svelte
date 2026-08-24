@@ -157,6 +157,27 @@
 			</svg>
 			<span class="logo-text">Clock In</span>
 		</div>
+		<div class="header-actions">
+		<a class="history-btn" href="/history" aria-label="View task history">
+			<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+				<path
+					d="M3 3V9H3.5M3.5 9C4.32 6.94 5.75 5.22 7.61 4.1C9.47 2.98 11.65 2.52 13.8 2.79C15.95 3.06 17.95 4.04 19.47 5.57C20.99 7.1 21.96 9.1 22.23 11.25"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path d="M3.5 9H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+				<circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5" />
+				<path
+					d="M11 7V11L14 13"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</a>
 		<button class="settings-btn" onclick={() => (settingsOpen = true)} aria-label="Open settings">
 			<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
 				<path
@@ -173,6 +194,7 @@
 				/>
 			</svg>
 		</button>
+		</div>
 	</header>
 
 	<main class="main">
@@ -300,6 +322,33 @@
 	}
 
 	.settings-btn:hover {
+		color: var(--color-warm-gray-700);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		transform: translateY(-1px);
+	}
+
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.history-btn {
+		background: white;
+		border: none;
+		padding: 0.625rem;
+		border-radius: 12px;
+		cursor: pointer;
+		color: var(--color-warm-gray-500);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+		transition: all 0.2s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-decoration: none;
+	}
+
+	.history-btn:hover {
 		color: var(--color-warm-gray-700);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		transform: translateY(-1px);
