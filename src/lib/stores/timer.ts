@@ -236,21 +236,27 @@ function createTimerStore() {
 	const { subscribe, set, update } = writable<TimerState>(initial);
 
 	let intervalId: ReturnType<typeof setInterval> | null = null;
+	let startedAt: number | null = null;
+	let secondsAtStart: number = 0;
 
 	function clearTimerInterval() {
 		if (intervalId) {
 			clearInterval(intervalId);
 			intervalId = null;
 		}
+		startedAt = null;
 	}
 
 	function tick() {
 		update((state) => {
-			if (state.remainingSeconds <= 1) {
+			if (!startedAt) return state;
+			const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+			const remaining = Math.max(0, secondsAtStart - elapsed);
+			if (remaining <= 0) {
 				clearTimerInterval();
 				return { ...state, remainingSeconds: 0, isRunning: false, isComplete: true };
 			}
-			return { ...state, remainingSeconds: state.remainingSeconds - 1 };
+			return { ...state, remainingSeconds: remaining };
 		});
 	}
 
@@ -271,6 +277,8 @@ function createTimerStore() {
 			update((state) => {
 				if (state.isRunning || state.remainingSeconds <= 0) return state;
 				clearTimerInterval();
+				startedAt = Date.now();
+				secondsAtStart = state.remainingSeconds;
 				intervalId = setInterval(tick, TICK_INTERVAL);
 				return { ...state, isRunning: true, isComplete: false };
 			});
